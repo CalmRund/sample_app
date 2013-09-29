@@ -18,7 +18,18 @@ describe User do
   it { should respond_to(:password_confirmation) }
   it { should respond_to(:remember_token) }
   it { should respond_to(:authenticate) }
+  it { should respond_to(:admin) }
   it { should be_valid }
+  it { should_not be_admin }
+
+  describe "with admin attribute set to 'true'" do
+    before do
+      @user.save!
+      @user.toggle!(:admin) #toggle! 方法把 admin 属性的值从 false 转变成 true
+    end    
+    
+    it { should be_admin } #用户对象应该可以响应 admin? 方法（这是 RSpec 对布尔值属性的一个约定）
+  end
   
   describe "when name is not present" do
   	before { @user.name = " " }
