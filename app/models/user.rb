@@ -1,4 +1,5 @@
 class User < ActiveRecord::Base
+	has_many :microposts, dependent: :destroy #保证用户的微博在删除用户的同时也会被删除
 	before_save { self.email = email.downcase }
 	before_create :create_remember_token
 	validates :name, presence: true, length: { maximum: 50 }
@@ -8,11 +9,16 @@ class User < ActiveRecord::Base
 					  uniqueness: { case_sensitive: false }
 	has_secure_password
 	validates :password, length: { minimum: 6 }
-
+	
+	def feed #动态列表的初步实现
+	  # This is preliminary. See "Following users" for the full implementation.
+	  Micropost.where("user_id = ?", id)	
+	end
+	
 	def User.new_remember_token
 	  SecureRandom.urlsafe_base64
 	end
-
+	
 	def User.encrypt(token)
 	  Digest::SHA1.hexdigest(token.to_s)
 	end

@@ -10,6 +10,7 @@ class UsersController < ApplicationController
 
   def show
 	  @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def new
@@ -53,16 +54,6 @@ class UsersController < ApplicationController
   	end	
 
     # Before filters
-
-    def signed_in_user
-      #我们使用了设定 flash[:notice] 的简便方式，把 redirect_to 方法的第二个参数指定为一个 Hash
-      #flash[:error] 也可以使用上述的简便方式，但 flash[:success] 却不可以
-      unless signed_in?
-        store_location
-        redirect_to signin_url, notice: "Please sign in."
-      end
-    end
-
     def correct_user
       @user = User.find(params[:id])
       redirect_to(root_path) unless current_user?(@user)

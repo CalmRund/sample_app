@@ -23,6 +23,15 @@ module SessionsHelper
 	def current_user?(user)
 	  user == current_user
 	end
+	
+	#我们使用了设定 flash[:notice] 的简便方式，把 redirect_to 方法的第二个参数指定为一个 Hash
+    #flash[:error] 也可以使用上述的简便方式，但 flash[:success] 却不可以
+	def signed_in_user
+	  unless signed_in?
+	  	store_location
+	  	redirect_to signin_url, notice: "Please sign in."
+	  end
+	end
 
 	def sign_out
 	  self.current_user = nil

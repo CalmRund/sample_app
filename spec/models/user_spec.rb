@@ -19,6 +19,8 @@ describe User do
   it { should respond_to(:remember_token) }
   it { should respond_to(:authenticate) }
   it { should respond_to(:admin) }
+  it { should respond_to(:microposts) }
+  it { should respond_to(:feed) }
   it { should be_valid }
   it { should_not be_admin }
 
@@ -112,17 +114,52 @@ describe User do
       it { should eq found_user.authenticate(@user.password) }
     end
 	
-	describe "with invalid password " do
-	  let(:user_for_invalid_password) { found_user.authenticate("invalid") }
+	  describe "with invalid password " do
+	    let(:user_for_invalid_password) { found_user.authenticate("invalid") }
 
-	  it { should_not eq user_for_invalid_password }
-	  specify { expect(user_for_invalid_password).to be_false }
-	end
+	    it { should_not eq user_for_invalid_password }
+	    specify { expect(user_for_invalid_password).to be_false }
+	  end
   
-  describe "remember token" do
-    before { @user.save }
-    its(:remember_token) { should_not be_blank }
+    describe "remember token" do
+      before { @user.save }
+      its(:remember_token) { should_not be_blank }
+    end  
   end
   
-end
+  describe "micropost associations" do
+    
+    before { @user.save }
+    let!(:older_micropost) do #let! 方法，强制相应的变量立即被创建
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago)
+    end 
+    let!(:newer_micropost) do
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.hour.ago)
+    end
+
+    it "should have the right microposts in the right order" do
+      expect(@user.microposts.to_a).to eq [newer_micropost, older_micropost]    
+    end
+    
+    #测试用户删除后，所发布的微博是否也被删除了
+    it "should destroy associated microposts" do
+      microposts = @user.microposts.to_a
+      @user.destroy
+      expect(microposts).not_to be_empty
+      microposts.each do |micropost| #确认微博不在数据库中
+        expect(Micropost.where(id: micropost.id)).to be_empty    
+      end
+    end  
+    
+    #对临时动态列表的测试
+    describe "status" do
+      let(:unfollowed_post) do
+        FactoryGirl.create(:micropost, user: FactoryGirl.create(:user))
+      end
+
+      its(:feed) { should include(newer_micropost) }
+      its(:feed) { should include(older_micropost) }
+      its(:feed) { should_not include(unfollowed_post) }
+    end
+  end
 end 
