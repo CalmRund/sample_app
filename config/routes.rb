@@ -1,7 +1,12 @@
 SampleApp::Application.routes.draw do
-  resources :users
-  resources :sessions,   only: [:new, :create, :destroy]
-  resources :microposts, only: [:create, :destroy]
+  resources :users do
+    member do #设置这两个动作对应的 URL 地址中应该包含用户的 id
+      get :following, :followers
+    end
+  end
+  resources :sessions,      only: [:new, :create, :destroy]
+  resources :microposts,    only: [:create, :destroy]
+  resources :relationships, only: [:create, :destroy] 
   root to: 'static_pages#home'
   match '/signup',  to: 'users#new',            via: 'get'
   match '/signin',  to: 'sessions#new',         via: 'get'
